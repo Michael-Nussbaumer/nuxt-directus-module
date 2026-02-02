@@ -117,15 +117,15 @@ definePageMeta({
 
 Comprehensive guides for all module features:
 
-- **[Getting Started](https://michael-nussbaumer.github.io/nuxt-directus-module/getting-started)** - Installation, setup, and basic usage
-- **[Configuration](https://michael-nussbaumer.github.io/nuxt-directus-module/configuration)** - Module options and environment variables
-- **[Authentication](https://michael-nussbaumer.github.io/nuxt-directus-module/authentication)** - Login, logout, registration, and user management
-- **[API Usage](https://michael-nussbaumer.github.io/nuxt-directus-module/api)** - CRUD operations, queries, and filtering
-- **[Real-time WebSocket](https://michael-nussbaumer.github.io/nuxt-directus-module/realtime)** - Live subscriptions and event handling
-- **[Middleware](https://michael-nussbaumer.github.io/nuxt-directus-module/middleware)** - Route protection and authentication flows
-- **[Role-Based Permissions](https://michael-nussbaumer.github.io/nuxt-directus-module/role-based-permissions)** - Advanced access control
-- **[Type Generation](https://michael-nussbaumer.github.io/nuxt-directus-module/type-generation)** - Automatic TypeScript types from OpenAPI schema
-- **[Examples](https://michael-nussbaumer.github.io/nuxt-directus-module/examples)** - Code examples and use cases
+- **[Getting Started](https://michael-nussbaumer.github.io/nuxt-directus-module/getting-started/installation)** - Installation, setup, and basic usage
+- **[Configuration](https://michael-nussbaumer.github.io/nuxt-directus-module/getting-started/configuration)** - Module options and environment variables
+- **[Authentication](https://michael-nussbaumer.github.io/nuxt-directus-module/guides/authentication)** - Login, logout, registration, and user management
+- **[API Usage](https://michael-nussbaumer.github.io/nuxt-directus-module/guides/api)** - CRUD operations, queries, and filtering
+- **[Real-time WebSocket](https://michael-nussbaumer.github.io/nuxt-directus-module/guides/realtime)** - Live subscriptions and event handling
+- **[Middleware](https://michael-nussbaumer.github.io/nuxt-directus-module/guides/middleware)** - Route protection and authentication flows
+- **[Permissions](https://michael-nussbaumer.github.io/nuxt-directus-module/guides/permissions)** - Advanced access control
+- **[Type Generation](https://michael-nussbaumer.github.io/nuxt-directus-module/guides/type-generation)** - Automatic TypeScript types from OpenAPI schema
+- **[Examples](https://michael-nussbaumer.github.io/nuxt-directus-module/examples/examples)** - Code examples and use cases
 
 Or browse the [docs folder](./docs) in this repository.
 
