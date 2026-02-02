@@ -38,11 +38,15 @@ export const useDirectusRealtime = () => {
 
         // Check if subscription already exists
         if (subscriptions.has(subscriptionId)) {
-            console.warn(`[Directus Realtime] Subscription ${subscriptionId} already exists`);
+            if (import.meta.dev) {
+                console.warn(`[Directus Realtime] Subscription ${subscriptionId} already exists`);
+            }
             return subscriptions.get(subscriptionId)!;
         }
 
-        console.log(`[Directus Realtime] Subscribing to ${collection} with ID: ${subscriptionId}`);
+        if (import.meta.dev) {
+            console.log(`[Directus Realtime] Subscribing to ${collection} with ID: ${subscriptionId}`);
+        }
 
         try {
             // Subscribe to collection - note: this returns a Promise!
@@ -55,7 +59,9 @@ export const useDirectusRealtime = () => {
             (async () => {
                 try {
                     for await (const message of subscription) {
-                        console.log(`[Directus Realtime] Event received for ${collection}:`, message);
+                        if (import.meta.dev) {
+                            console.log(`[Directus Realtime] Event received for ${collection}:`, message);
+                        }
                         callback(message as T);
                     }
                 } catch (error) {
@@ -93,11 +99,15 @@ export const useDirectusRealtime = () => {
         const handler = subscriptions.get(subscriptionId);
 
         if (!handler) {
-            console.warn(`[Directus Realtime] Subscription ${subscriptionId} not found`);
+            if (import.meta.dev) {
+                console.warn(`[Directus Realtime] Subscription ${subscriptionId} not found`);
+            }
             return;
         }
 
-        console.log(`[Directus Realtime] Unsubscribing from ${handler.collection} (${subscriptionId})`);
+        if (import.meta.dev) {
+            console.log(`[Directus Realtime] Unsubscribing from ${handler.collection} (${subscriptionId})`);
+        }
 
         try {
             handler.unsubscribe();

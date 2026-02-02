@@ -54,7 +54,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     const enableGlobalMiddleware = config.public.directus?.enableGlobalMiddleware ?? true;
 
-    console.log("[directus-auth middleware] from", from.fullPath, "to", to.fullPath);
+    if (import.meta.dev) {
+        console.log("[directus-auth middleware] from", from.fullPath, "to", to.fullPath);
+    }
 
     // Handle different auth meta formats
     const authMetaRaw = to.meta?.auth;
@@ -188,7 +190,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
                         // User must have at least ONE of the specified roles (OR logic)
                         const hasPermission = authMeta.roles.some((requiredRole) => userRoles.includes(requiredRole));
                         if (!hasPermission) {
-                            console.warn(`[directus-auth middleware] User roles [${userRoles.join(", ")}] don't match required roles:`, authMeta.roles);
+                            if (import.meta.dev) {
+                                console.warn(`[directus-auth middleware] User roles [${userRoles.join(", ")}] don't match required roles:`, authMeta.roles);
+                            }
                             const unauthorizedRedirect = authMeta.unauthorizedRedirect || "/";
                             return navigateTo(unauthorizedRedirect);
                         }
@@ -199,7 +203,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
                         // User must NOT have any of these roles
                         const isExcluded = userRoles.some((role) => authMeta.excludeRoles!.includes(role));
                         if (isExcluded) {
-                            console.warn(`[directus-auth middleware] User has excluded role in [${userRoles.join(", ")}]:`, authMeta.excludeRoles);
+                            if (import.meta.dev) {
+                                console.warn(`[directus-auth middleware] User has excluded role in [${userRoles.join(", ")}]:`, authMeta.excludeRoles);
+                            }
                             const unauthorizedRedirect = authMeta.unauthorizedRedirect || "/";
                             return navigateTo(unauthorizedRedirect);
                         }

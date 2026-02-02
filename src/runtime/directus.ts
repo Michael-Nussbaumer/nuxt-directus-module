@@ -38,7 +38,7 @@ export default defineNuxtPlugin(async () => {
         throw new Error("[Directus] NUXT_PUBLIC_DIRECTUS_URL is not configured. Please set it in your nuxt.config.ts runtimeConfig.public.directusUrl");
     }
 
-    if (import.meta.client) {
+    if (import.meta.client && import.meta.dev) {
         console.log("[Directus] Using API URL:", apiUrl);
     }
 
@@ -47,7 +47,7 @@ export default defineNuxtPlugin(async () => {
     const wsBaseUrl = config.public.directusWsUrl || config.public.directusUrl;
     const wsUrl = wsBaseUrl.replace(/^http/, "ws") + "/websocket";
 
-    if (import.meta.client) {
+    if (import.meta.client && import.meta.dev) {
         console.log("[Directus] WebSocket URL:", wsUrl);
     }
 
@@ -78,12 +78,16 @@ export default defineNuxtPlugin(async () => {
             directusClient.connect();
 
             directusClient.onWebSocket("open", () => {
-                console.log("[Directus] WebSocket connection established");
+                if (import.meta.dev) {
+                    console.log("[Directus] WebSocket connection established");
+                }
                 isWebSocketConnected.value = true;
             });
 
             directusClient.onWebSocket("close", () => {
-                console.log("[Directus] WebSocket connection closed");
+                if (import.meta.dev) {
+                    console.log("[Directus] WebSocket connection closed");
+                }
                 isWebSocketConnected.value = false;
             });
 
@@ -93,7 +97,9 @@ export default defineNuxtPlugin(async () => {
             });
 
             directusClient.onWebSocket("message", (message) => {
-                console.log("[Directus] WebSocket message:", message);
+                if (import.meta.dev) {
+                    console.log("[Directus] WebSocket message:", message);
+                }
             });
         } catch (error) {
             console.error("[Directus] WebSocket connection failed:", error);
