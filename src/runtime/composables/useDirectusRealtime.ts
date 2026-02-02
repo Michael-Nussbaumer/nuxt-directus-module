@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from "vue";
+import { ref, unref, computed, onUnmounted } from "vue";
 import { useNuxtApp } from "#app";
 import type { DirectusClient } from "@directus/sdk";
 

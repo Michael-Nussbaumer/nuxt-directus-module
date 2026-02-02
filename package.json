@@ -1,6 +1,6 @@
 {
     "name": "@michael-nussbaumer/nuxt-directus",
-    "version": "0.1.0",
+    "version": "0.2.2",
     "description": "Nuxt 4 module for Directus SDK with auth and TypeScript type generation",
     "license": "MIT",
     "type": "module",
@@ -18,18 +18,18 @@
     ],
     "scripts": {
         "dev": "pnpm run generate:types && nuxi dev playground",
-        "build": "pnpm run generate:types && unbuild",
+        "build": "nuxt-module-build build",
         "prepack": "pnpm run build",
         "generate:types": "cross-env NODE_ENV=development tsx scripts/generate-directus-types.ts",
         "lint": "eslint .",
         "release": "pnpm run build && npm publish"
     },
     "dependencies": {
-        "@directus/sdk": "^17.0.0",
         "@nuxt/kit": "^3.15.3",
         "defu": "^6.1.4"
     },
     "devDependencies": {
+        "@directus/sdk": "^21.0.0",
         "@nuxt/module-builder": "^0.8.4",
         "@nuxt/schema": "^3.15.3",
         "@types/node": "^22.10.5",
@@ -40,6 +40,10 @@
         "tsx": "^4.19.2",
         "typescript": "^5.7.3",
         "unbuild": "^2.0.0"
+    },
+    "peerDependencies": {
+        "@directus/sdk": ">=17.0.0",
+        "vue": "^3.0.0"
     },
     "packageManager": "pnpm@9.15.4",
     "publishConfig": {

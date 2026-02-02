@@ -1,4 +1,5 @@
-import { defineNuxtPlugin, useRuntimeConfig } from "#app";
+import { defineNuxtPlugin, useRuntimeConfig, useCookie, useState } from "#app";
+import { readonly } from "vue";
 import { createDirectus, rest, authentication, realtime, readMe, type AuthenticationStorage } from "@directus/sdk";
 
 interface DirectusUser {
