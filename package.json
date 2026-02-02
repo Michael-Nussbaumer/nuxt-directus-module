@@ -24,7 +24,7 @@
         "lint": "eslint .",
         "release": "pnpm run build && npm publish",
         "docs:dev": "cd docs-site && pnpm install && pnpm run dev",
-        "docs:build": "cd docs-site && pnpm install && pnpm run build",
+        "docs:build": "cd docs-site && pnpm install && pnpm run generate",
         "docs:preview": "cd docs-site && pnpm run preview"
     },
     "dependencies": {

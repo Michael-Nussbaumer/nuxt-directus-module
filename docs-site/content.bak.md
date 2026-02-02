@@ -1,99 +1,63 @@
 ---
-title: Home
-navigation: false
+layout: home
+
+hero:
+  name: "@michael-nussbaumer/nuxt-directus"
+  text: "Directus SDK for Nuxt 4"
+  tagline: Production-ready integration with authentication, middleware, and TypeScript type generation
+  image:
+    src: /logo.svg
+    alt: Nuxt Directus
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /getting-started
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/Michael-Nussbaumer/nuxt-directus-module
+    - theme: alt
+      text: NPM Package
+      link: https://www.npmjs.com/package/@michael-nussbaumer/nuxt-directus
+
+features:
+  - icon: 🔌
+    title: Directus SDK Integration
+    details: Seamless integration with @directus/sdk for all CRUD operations and custom requests
+  
+  - icon: 🔐
+    title: Authentication Built-in
+    details: Login, logout, register, password reset, email verification, and 2FA support out of the box
+  
+  - icon: 🛡️
+    title: Global Auth Middleware
+    details: Configurable route protection with flexible page meta options for public and protected routes
+  
+  - icon: 📘
+    title: TypeScript Type Generation
+    details: Auto-generate types from Directus OpenAPI schema for full type safety
+  
+  - icon: 👥
+    title: Role-Based Permissions
+    details: Optional role-based access control with custom field mapping and transform functions
+  
+  - icon: ⚡
+    title: Realtime WebSocket
+    details: Subscribe to live updates with automatic connection management and duplicate prevention
+  
+  - icon: ⚙️
+    title: Flexible Configuration
+    details: Extensive configuration options for auth paths, middleware behavior, and more
+  
+  - icon: 🚀
+    title: Nuxt 4 Ready
+    details: Built for Nuxt 4 with full compatibility for Nuxt 3 projects
 ---
-
-::hero
----
-announcement:
-  title: 'Release v0.2.3'
-  icon: i-lucide-rocket
-  to: https://github.com/Michael-Nussbaumer/nuxt-directus-module/releases
-actions:
-  - name: Get Started
-    to: /getting-started
-    icon: i-lucide-arrow-right
-    trailing: true
-    variant: solid
-  - name: Star on GitHub
-    to: https://github.com/Michael-Nussbaumer/nuxt-directus-module
-    icon: i-simple-icons-github
-    target: _blank
-    variant: outline
----
-
-#title
-Directus SDK for Nuxt
-
-#description
-Production-ready Nuxt 4 module that integrates Directus SDK with authentication, configurable global auth middleware, and automatic TypeScript type generation.
-::
-::
-
-::card-group
-  ::card
-  ---
-  title: 🔌 Directus SDK Integration
-  ---
-  Seamless integration with @directus/sdk for all CRUD operations and custom requests
-  ::
-
-  ::card
-  ---
-  title: 🔐 Authentication Built-in
-  ---
-  Login, logout, register, password reset, email verification, and 2FA support out of the box
-  ::
-
-  ::card
-  ---
-  title: 🛡️ Global Auth Middleware
-  ---
-  Configurable route protection with flexible page meta options for public and protected routes
-  ::
-
-  ::card
-  ---
-  title: 📘 TypeScript Type Generation
-  ---
-  Auto-generate types from Directus OpenAPI schema for full type safety
-  ::
-
-  ::card
-  ---
-  title: 👥 Role-Based Permissions
-  ---
-  Optional role-based access control with custom field mapping and transform functions
-  ::
-
-  ::card
-  ---
-  title: ⚡ Realtime WebSocket
-  ---
-  Subscribe to live updates with automatic connection management and duplicate prevention
-  ::
-
-  ::card
-  ---
-  title: ⚙️ Flexible Configuration
-  ---
-  Extensive configuration options for auth paths, middleware behavior, and more
-  ::
-
-  ::card
-  ---
-  title: 🚀 Nuxt 4 Ready
-  ---
-  Built for Nuxt 4 with full compatibility for Nuxt 3 projects
-  ::
-::
 
 ## Quick Start
 
 Install the module:
 
-::code-group
-
+::: code-group
 ```bash [pnpm]
 pnpm add @michael-nussbaumer/nuxt-directus
 ```
@@ -105,8 +69,7 @@ npm install @michael-nussbaumer/nuxt-directus
 ```bash [yarn]
 yarn add @michael-nussbaumer/nuxt-directus
 ```
-
-::
+:::
 
 Add to your `nuxt.config.ts`:
 

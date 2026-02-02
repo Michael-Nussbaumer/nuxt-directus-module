@@ -2,9 +2,9 @@
 
 The `useDirectusAuth()` composable provides authentication methods and reactive state.
 
-::: tip Server Configuration Required
+::callout{icon="i-lucide-info" color="blue"}
 For password reset and email verification to work, you must configure URL allow lists on your Directus server. See [Configuration → Directus Server Configuration](/configuration#directus-server-configuration) for details.
-:::
+::
 
 ## Usage
 
@@ -206,9 +206,9 @@ await fetchUser();
 
 Verify user email address with a verification token.
 
-::: warning Directus Server Configuration
+::callout{icon="i-lucide-alert-triangle" color="amber"}
 Requires `USER_REGISTER_URL_ALLOW_LIST` configured on your Directus server. See [Configuration](/configuration#directus-server-configuration).
-:::
+::
 
 **Parameters:**
 
@@ -232,9 +232,9 @@ onMounted(async () => {
 
 Request a password reset email.
 
-::: warning Directus Server Configuration
+::callout{icon="i-lucide-alert-triangle" color="amber"}
 Requires `PASSWORD_RESET_URL_ALLOW_LIST` configured on your Directus server. See [Configuration](/configuration#directus-server-configuration).
-:::
+::
 
 **Parameters:**
 

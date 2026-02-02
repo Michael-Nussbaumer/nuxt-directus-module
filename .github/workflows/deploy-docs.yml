@@ -41,14 +41,16 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: docs-site
 
-      - name: Build documentation
-        run: pnpm run build
+      - name: Build Nuxt documentation
+        run: pnpm run generate
         working-directory: docs-site
+        env:
+          NUXT_APP_BASE_URL: /nuxt-directus-module/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs-site/.vitepress/dist
+          path: docs-site/.output/public
 
   deploy:
     environment:
