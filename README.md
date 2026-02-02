@@ -231,6 +231,4 @@ https://github.com/Michael-Nussbaumer/nuxt-directus-module
 
 ## Documentation Site
 
-The documentation is hosted on GitHub Pages. To set it up for the first time, see [GITHUB_PAGES_SETUP.md](./GITHUB_PAGES_SETUP.md).
-
 Visit: https://michael-nussbaumer.github.io/nuxt-directus-module/
