@@ -1,0 +1,553 @@
+# Realtime (WebSocket)
+
+The `useDirectusRealtime()` composable provides WebSocket subscription management for real-time updates.
+
+## Features
+
+- ✅ Prevents duplicate subscriptions
+- ✅ Auto-cleanup on component unmount
+- ✅ Persistent subscriptions for global data
+- ✅ Connection state tracking
+- ✅ Automatic reconnection handling
+
+## Usage
+
+```vue
+<script setup lang="ts">
+const { isConnected, subscribe, unsubscribe, unsubscribeCollection, unsubscribeAll, getActiveSubscriptions, hasSubscription, sendMessage, reconnect } = useDirectusRealtime();
+</script>
+```
+
+## Connection State
+
+### `isConnected`
+
+- **Type:** `ComputedRef<boolean>`
+- **Readonly**
+
+WebSocket connection status.
+
+```typescript
+const { isConnected } = useDirectusRealtime()
+
+<div v-if="isConnected" class="online">
+  Connected
+</div>
+<div v-else class="offline">
+  Disconnected
+</div>
+```
+
+## Subscription Management
+
+### `subscribe(options, callback)`
+
+Subscribe to real-time updates for a collection.
+
+**Parameters:**
+
+- `options.collection` (string) - Collection name
+- `options.query` (object, optional) - Filter/query for subscription
+- `options.uid` (string, optional) - Unique subscription ID
+- `options.persistent` (boolean, optional) - Keep subscription alive across navigation
+- `callback` (function) - Callback function for updates
+
+**Returns:** `SubscriptionHandler`
+
+```typescript
+const { subscribe } = useDirectusRealtime();
+
+// Basic subscription
+subscribe({ collection: "posts" }, (data) => {
+    console.log("Post updated:", data);
+});
+
+// With query filter
+subscribe(
+    {
+        collection: "posts",
+        query: {
+            filter: { status: { _eq: "published" } },
+        },
+    },
+    (data) => {
+        console.log("Published post updated:", data);
+    },
+);
+
+// Persistent subscription (survives navigation)
+subscribe(
+    {
+        collection: "notifications",
+        uid: "global-notifications",
+        persistent: true,
+    },
+    (data) => {
+        showNotification(data);
+    },
+);
+```
+
+### Auto-Cleanup Behavior
+
+**Non-persistent subscriptions:**
+
+- Automatically unsubscribed when component unmounts
+- Ideal for page-specific data
+
+**Persistent subscriptions:**
+
+- Remain active across navigation
+- Ideal for global data (notifications, messages, etc.)
+- Must be manually unsubscribed
+
+```vue
+<script setup lang="ts">
+const { subscribe } = useDirectusRealtime();
+
+// Auto-cleanup on component unmount
+subscribe({ collection: "posts" }, (data) => {
+    // Handle updates
+});
+
+// Persists across navigation
+subscribe(
+    {
+        collection: "messages",
+        persistent: true,
+        uid: "user-messages",
+    },
+    (data) => {
+        // Handle messages
+    },
+);
+</script>
+```
+
+### Duplicate Prevention
+
+The module automatically prevents duplicate subscriptions:
+
+```typescript
+const { subscribe, hasSubscription } = useDirectusRealtime();
+
+// First subscription
+subscribe({ collection: "posts", uid: "posts-sub" }, (data) => console.log("Update 1:", data));
+
+// This will be ignored (duplicate UID)
+subscribe({ collection: "posts", uid: "posts-sub" }, (data) => console.log("Update 2:", data));
+
+// Check if subscription exists
+if (hasSubscription("posts-sub")) {
+    console.log("Already subscribed");
+}
+```
+
+### `unsubscribe(subscriptionId)`
+
+Unsubscribe from a specific subscription.
+
+**Parameters:**
+
+- `subscriptionId` (string) - Subscription UID
+
+```typescript
+const { subscribe, unsubscribe } = useDirectusRealtime();
+
+const handler = subscribe({ collection: "posts", uid: "my-posts" }, (data) => console.log(data));
+
+// Later...
+unsubscribe("my-posts");
+```
+
+### `unsubscribeCollection(collection)`
+
+Unsubscribe from all non-persistent subscriptions for a collection.
+
+**Parameters:**
+
+- `collection` (string) - Collection name
+
+```typescript
+const { unsubscribeCollection } = useDirectusRealtime();
+
+// Unsubscribe from all post subscriptions
+unsubscribeCollection("posts");
+```
+
+### `unsubscribeAll()`
+
+Unsubscribe from all non-persistent subscriptions.
+
+```typescript
+const { unsubscribeAll } = useDirectusRealtime();
+
+// Clean up all subscriptions
+unsubscribeAll();
+```
+
+### `getActiveSubscriptions()`
+
+Get list of all active subscriptions.
+
+**Returns:** `SubscriptionHandler[]`
+
+```typescript
+const { getActiveSubscriptions } = useDirectusRealtime();
+
+const active = getActiveSubscriptions();
+console.log(`Active subscriptions: ${active.length}`);
+
+active.forEach((sub) => {
+    console.log(`- ${sub.collection} (${sub.uid})`);
+});
+```
+
+### `hasSubscription(subscriptionId)`
+
+Check if a subscription exists.
+
+**Parameters:**
+
+- `subscriptionId` (string) - Subscription UID
+
+**Returns:** `boolean`
+
+```typescript
+const { hasSubscription } = useDirectusRealtime();
+
+if (!hasSubscription("posts-sub")) {
+    // Subscribe
+}
+```
+
+## Connection Management
+
+### `reconnect()`
+
+Manually reconnect WebSocket.
+
+```typescript
+const { reconnect, isConnected } = useDirectusRealtime();
+
+if (!isConnected.value) {
+    reconnect();
+}
+```
+
+### `sendMessage(message)`
+
+Send a custom message through WebSocket.
+
+**Parameters:**
+
+- `message` (any) - Message to send
+
+```typescript
+const { sendMessage } = useDirectusRealtime();
+
+sendMessage({
+    type: "ping",
+    data: { timestamp: Date.now() },
+});
+```
+
+## Complete Example: Live Posts Feed
+
+```vue
+<template>
+    <div>
+        <div class="connection-status">
+            <span :class="{ online: isConnected, offline: !isConnected }">
+                {{ isConnected ? "● Online" : "○ Offline" }}
+            </span>
+        </div>
+
+        <h1>Live Posts Feed</h1>
+
+        <div v-for="post in posts" :key="post.id" class="post">
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.content }}</p>
+            <small>{{ post.date_updated }}</small>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+const { getItems } = useDirectusApi();
+const { subscribe, isConnected } = useDirectusRealtime();
+
+interface Post {
+    id: string;
+    title: string;
+    content: string;
+    date_updated: string;
+}
+
+const posts = ref<Post[]>([]);
+
+// Initial fetch
+const fetchPosts = async () => {
+    posts.value = await getItems<Post>("posts", {
+        sort: ["-date_updated"],
+        limit: 20,
+    });
+};
+
+// Subscribe to realtime updates
+const setupRealtimeSubscription = () => {
+    subscribe(
+        {
+            collection: "posts",
+            uid: "live-posts-feed",
+        },
+        async (event: any) => {
+            console.log("Post event:", event);
+
+            // Handle different event types
+            if (event.type === "create") {
+                posts.value.unshift(event.data);
+            } else if (event.type === "update") {
+                const index = posts.value.findIndex((p) => p.id === event.data.id);
+                if (index !== -1) {
+                    posts.value[index] = event.data;
+                }
+            } else if (event.type === "delete") {
+                posts.value = posts.value.filter((p) => p.id !== event.data.id);
+            }
+        },
+    );
+};
+
+onMounted(async () => {
+    await fetchPosts();
+    setupRealtimeSubscription();
+});
+</script>
+
+<style scoped>
+.online {
+    color: green;
+}
+.offline {
+    color: red;
+}
+.post {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    margin: 0.5rem 0;
+}
+</style>
+```
+
+## Global Notifications Example
+
+```vue
+<template>
+    <div class="notifications">
+        <div v-for="notification in notifications" :key="notification.id" class="notification">
+            {{ notification.message }}
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+const { subscribe } = useDirectusRealtime();
+
+const notifications = ref<any[]>([]);
+
+// Persistent subscription for global notifications
+subscribe(
+    {
+        collection: "notifications",
+        uid: "global-notifications",
+        persistent: true, // Survives navigation
+        query: {
+            filter: {
+                user_id: { _eq: "$CURRENT_USER" },
+            },
+        },
+    },
+    (event: any) => {
+        if (event.type === "create") {
+            notifications.value.unshift(event.data);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notifications.value = notifications.value.filter((n) => n.id !== event.data.id);
+            }, 5000);
+        }
+    },
+);
+</script>
+```
+
+## Chat Application Example
+
+```vue
+<template>
+    <div class="chat">
+        <div class="messages">
+            <div v-for="message in messages" :key="message.id" :class="{ own: message.user_id === currentUser?.id }">
+                <strong>{{ message.user.name }}:</strong>
+                {{ message.text }}
+            </div>
+        </div>
+
+        <form @submit.prevent="sendMessage">
+            <input v-model="newMessage" placeholder="Type a message..." />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+</template>
+
+<script setup lang="ts">
+const { user: currentUser } = useDirectusAuth();
+const { getItems, createOne } = useDirectusApi();
+const { subscribe, isConnected } = useDirectusRealtime();
+
+const route = useRoute();
+const channelId = route.params.id;
+
+const messages = ref<any[]>([]);
+const newMessage = ref("");
+
+// Load initial messages
+const loadMessages = async () => {
+    messages.value = await getItems("messages", {
+        filter: { channel_id: { _eq: channelId } },
+        sort: ["date_created"],
+        fields: ["*", "user.name"],
+        limit: 100,
+    });
+};
+
+// Subscribe to new messages
+const subscribeToMessages = () => {
+    subscribe(
+        {
+            collection: "messages",
+            uid: `channel-${channelId}`,
+            query: {
+                filter: { channel_id: { _eq: channelId } },
+            },
+        },
+        (event: any) => {
+            if (event.type === "create") {
+                messages.value.push(event.data);
+                // Scroll to bottom
+                nextTick(() => {
+                    const container = document.querySelector(".messages");
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                });
+            }
+        },
+    );
+};
+
+// Send message
+const sendMessage = async () => {
+    if (!newMessage.value.trim()) return;
+
+    await createOne("messages", {
+        channel_id: channelId,
+        text: newMessage.value,
+        user_id: currentUser.value?.id,
+    });
+
+    newMessage.value = "";
+};
+
+onMounted(async () => {
+    await loadMessages();
+    subscribeToMessages();
+});
+</script>
+```
+
+## Best Practices
+
+### 1. Use Unique IDs
+
+```typescript
+// Good: Unique, predictable IDs
+subscribe(
+    {
+        collection: "posts",
+        uid: `posts-${userId}`,
+    },
+    handler,
+);
+
+// Avoid: Auto-generated IDs make it hard to manage
+subscribe({ collection: "posts" }, handler);
+```
+
+### 2. Persistent vs Non-Persistent
+
+```typescript
+// Persistent: Global data that should persist
+subscribe(
+    {
+        collection: "notifications",
+        uid: "global-notifications",
+        persistent: true,
+    },
+    handler,
+);
+
+// Non-persistent: Page-specific data
+subscribe(
+    {
+        collection: "posts",
+        uid: "page-posts",
+    },
+    handler,
+);
+```
+
+### 3. Cleanup Persistent Subscriptions
+
+```typescript
+// In a layout or plugin
+onUnmounted(() => {
+    // Clean up persistent subscriptions when needed
+    unsubscribe("global-notifications");
+});
+```
+
+### 4. Handle Connection Loss
+
+```vue
+<script setup lang="ts">
+const { isConnected, reconnect, subscribe } = useDirectusRealtime();
+
+// Auto-reconnect on connection loss
+watch(isConnected, (connected, wasConnected) => {
+    if (!connected && wasConnected) {
+        console.log("Connection lost, attempting reconnect...");
+        setTimeout(reconnect, 5000);
+    }
+});
+</script>
+```
+
+## TypeScript Types
+
+```typescript
+interface SubscriptionOptions {
+    collection: string;
+    query?: Record<string, any>;
+    uid?: string;
+    persistent?: boolean;
+}
+
+interface SubscriptionHandler {
+    uid: string;
+    collection: string;
+    unsubscribe: () => void;
+    persistent: boolean;
+}
+```

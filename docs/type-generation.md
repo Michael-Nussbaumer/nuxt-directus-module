@@ -1,0 +1,460 @@
+# Type Generation
+
+Automatically generate TypeScript types from your Directus OpenAPI schema.
+
+## Setup
+
+### 1. Enable Type Generation
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        types: {
+            enabled: true,
+            openApiUrl: "http://directus.local/server/specs/oas",
+            output: "./schema/schema.d.ts",
+            authHeaderEnv: "DIRECTUS_OPENAPI_TOKEN",
+        },
+    },
+});
+```
+
+### 2. Set Environment Variables
+
+```env
+# .env
+DIRECTUS_URL=http://localhost:8055
+DIRECTUS_OPENAPI_TOKEN=Bearer your-admin-token
+```
+
+**Note:** The OpenAPI token needs admin permissions to access the schema endpoint.
+
+### 3. Generate Types
+
+Types are automatically generated when you run:
+
+```bash
+# Development
+pnpm run dev
+
+# Build
+pnpm run build
+
+# Manual generation
+pnpm run generate:types
+```
+
+## Configuration Options
+
+### `types.enabled`
+
+- **Type:** `boolean`
+- **Default:** `false`
+
+Enable or disable automatic type generation.
+
+### `types.openApiUrl`
+
+- **Type:** `string`
+- **Required:** Yes (when enabled)
+
+URL to your Directus OpenAPI schema endpoint.
+
+Typically: `{DIRECTUS_URL}/server/specs/oas`
+
+### `types.output`
+
+- **Type:** `string`
+- **Default:** `'./schema/schema.d.ts'`
+
+Where to save the generated TypeScript types.
+
+### `types.redoclyConfig`
+
+- **Type:** `string`
+- **Optional**
+
+Path to Redocly configuration file for advanced schema processing.
+
+```typescript
+types: {
+    redoclyConfig: "./redocly.yaml";
+}
+```
+
+### `types.authHeaderEnv`
+
+- **Type:** `string`
+- **Default:** `'DIRECTUS_OPENAPI_TOKEN'`
+
+Environment variable name for the auth token.
+
+## Using Generated Types
+
+The generated types are automatically available through the module's type exports.
+
+### Import Types
+
+```typescript
+import type { components, paths } from "#directus-types";
+
+// Or from the schema file directly
+import type { components } from "~/schema/schema";
+```
+
+### Type Your Collections
+
+```typescript
+// Define collection types
+type User = components["schemas"]["Users"];
+type Post = components["schemas"]["Posts"];
+type Comment = components["schemas"]["Comments"];
+
+// Use with API methods
+const { getItems, createOne } = useDirectusApi();
+
+const posts = await getItems<Post>("posts");
+const newPost = await createOne<Post>("posts", {
+    title: "Hello",
+    content: "World",
+    author: userId,
+});
+```
+
+### Type Relationships
+
+```typescript
+type Post = components["schemas"]["Posts"];
+type User = components["schemas"]["Users"];
+
+interface PostWithAuthor extends Post {
+    author: User;
+}
+
+const posts = await getItems<PostWithAuthor>("posts", {
+    fields: ["*", "author.*"],
+});
+
+// TypeScript knows about author fields
+posts.forEach((post) => {
+    console.log(post.author.email); // ✅ Type-safe
+});
+```
+
+## Generated Schema Structure
+
+The generated `schema.d.ts` file contains:
+
+### Components
+
+All your Directus collections, fields, and custom endpoints:
+
+```typescript
+export interface components {
+    schemas: {
+        Users: {
+            id: string;
+            email: string;
+            first_name?: string;
+            last_name?: string;
+            role?: string;
+            // ... more fields
+        };
+        Posts: {
+            id: string;
+            title: string;
+            content: string;
+            author: string; // User ID
+            status: "draft" | "published" | "archived";
+            date_created: string;
+            date_updated: string;
+            // ... more fields
+        };
+        // ... more collections
+    };
+}
+```
+
+### Paths
+
+API endpoint types:
+
+```typescript
+export interface paths {
+    "/items/posts": {
+        get: {
+            parameters: {
+                /* ... */
+            };
+            responses: {
+                /* ... */
+            };
+        };
+        post: {
+            /* ... */
+        };
+    };
+    // ... more endpoints
+}
+```
+
+## Type-Safe Queries
+
+### With Query Parameters
+
+```typescript
+import type { components } from "#directus-types";
+import type { Query } from "@directus/sdk";
+
+type Post = components["schemas"]["Posts"];
+
+const { getItems } = useDirectusApi();
+
+// Type-safe query
+const query: Query<any, Post> = {
+    filter: {
+        status: { _eq: "published" },
+        // TypeScript validates field names
+    },
+    fields: ["id", "title", "author.*"],
+    sort: ["-date_created"],
+};
+
+const posts = await getItems<Post>("posts", query);
+```
+
+### With Form Data
+
+```typescript
+type Post = components["schemas"]["Posts"];
+
+const formData = ref<Partial<Post>>({
+    title: "",
+    content: "",
+    status: "draft",
+});
+
+const handleSubmit = async () => {
+    // TypeScript validates form data structure
+    await createOne<Post>("posts", formData.value);
+};
+```
+
+## Advanced Usage
+
+### Custom Type Helpers
+
+Create helper types for common patterns:
+
+```typescript
+// types/directus.ts
+import type { components } from "#directus-types";
+
+// Extract collection type
+export type DirectusCollection<T extends keyof components["schemas"]> = components["schemas"][T];
+
+// Collection with relations
+export type WithRelations<T, R extends Record<string, any>> = T & R;
+
+// Usage
+type Post = DirectusCollection<"Posts">;
+type User = DirectusCollection<"Users">;
+
+type PostWithAuthor = WithRelations<
+    Post,
+    {
+        author: User;
+    }
+>;
+```
+
+### Enum Types
+
+```typescript
+import type { components } from "#directus-types";
+
+type Post = components["schemas"]["Posts"];
+
+// Extract enum type
+type PostStatus = Post["status"];
+
+// Use in components
+const statuses: PostStatus[] = ["draft", "published", "archived"];
+```
+
+### Union Types
+
+```typescript
+type Content = components["schemas"]["Posts"] | components["schemas"]["Pages"] | components["schemas"]["Articles"];
+
+const renderContent = (content: Content) => {
+    // Handle different content types
+};
+```
+
+## Regeneration
+
+### When to Regenerate
+
+Regenerate types when you:
+
+- Add new collections
+- Add/remove/modify fields
+- Change field types
+- Update relationships
+
+### How to Regenerate
+
+```bash
+pnpm run generate:types
+```
+
+Or:
+
+```bash
+pnpm run dev  # Auto-generates on start
+pnpm run build  # Auto-generates before build
+```
+
+## Git Ignore
+
+The generated types are typically git-ignored:
+
+```gitignore
+# .gitignore
+schema/schema.d.ts
+```
+
+**Pros:**
+
+- Keeps schema in sync with your Directus instance
+- Reduces merge conflicts
+- Smaller repo size
+
+**Cons:**
+
+- CI/CD needs access to Directus
+- Requires type generation on every checkout
+
+**Alternative:** Commit types if you want version control.
+
+## Troubleshooting
+
+### Error: Cannot find module '#directus-types'
+
+**Solution:** Generate types first:
+
+```bash
+pnpm run generate:types
+```
+
+### Error: Failed to fetch OpenAPI schema
+
+**Causes:**
+
+1. Wrong `openApiUrl`
+2. Missing/invalid auth token
+3. Directus not accessible
+
+**Solutions:**
+
+```bash
+# Verify URL is accessible
+curl http://directus.local/server/specs/oas
+
+# Check auth token
+echo $DIRECTUS_OPENAPI_TOKEN
+
+# Verify token has admin permissions
+```
+
+### Types Don't Match Actual Data
+
+**Cause:** Types not regenerated after schema changes
+
+**Solution:**
+
+```bash
+pnpm run generate:types
+```
+
+### TypeScript Errors After Regeneration
+
+**Cause:** Field names or types changed in schema
+
+**Solution:** Update code to match new types or revert schema changes.
+
+## Example: Complete Type-Safe Component
+
+```vue
+<template>
+    <div>
+        <h1>Posts</h1>
+
+        <div v-for="post in posts" :key="post.id">
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.content }}</p>
+            <small>By {{ post.author.first_name }}</small>
+            <span :class="`status-${post.status}`">
+                {{ post.status }}
+            </span>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import type { components } from "#directus-types";
+
+// Type definitions
+type Post = components["schemas"]["Posts"];
+type User = components["schemas"]["Users"];
+
+interface PostWithAuthor extends Post {
+    author: User;
+}
+
+const { getItems } = useDirectusApi();
+
+// Type-safe data fetching
+const posts = ref<PostWithAuthor[]>([]);
+
+const fetchPosts = async () => {
+    posts.value = await getItems<PostWithAuthor>("posts", {
+        filter: {
+            status: { _eq: "published" }, // ✅ Type-checked
+        },
+        fields: ["*", "author.*"], // ✅ Type-checked
+        sort: ["-date_created"],
+    });
+};
+
+onMounted(fetchPosts);
+</script>
+```
+
+## Benefits
+
+### 1. Type Safety
+
+- Catch errors at compile time
+- Autocomplete for fields
+- Refactoring confidence
+
+### 2. Better DX
+
+- IntelliSense in IDE
+- Inline documentation
+- Faster development
+
+### 3. Maintainability
+
+- Self-documenting code
+- Easier onboarding
+- Reduced bugs
+
+### 4. Consistency
+
+- Single source of truth
+- Schema and code stay in sync
+- Easier API changes

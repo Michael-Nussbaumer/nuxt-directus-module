@@ -1,0 +1,256 @@
+# Example Configuration
+
+## Basic Configuration (nuxt.config.ts)
+
+```typescript
+export default defineNuxtConfig({
+    directus: {
+        auth: {
+            // ... existing auth config ...
+
+            // Add permissions configuration
+            permissions: {
+                enabled: true,
+                field: "role", // Use the 'role' field from Directus user
+                mapping: {
+                    // Map Directus role UUIDs to readable names
+                    "a1b2c3d4-5678-90ab-cdef-123456789abc": "admin",
+                    "b2c3d4e5-6789-01bc-def0-234567890bcd": "editor",
+                    "c3d4e5f6-7890-12cd-ef01-345678901cde": "user",
+                },
+            },
+        },
+    },
+});
+```
+
+## Page Example with Role Restriction
+
+```vue
+<!-- pages/admin.vue -->
+<script setup lang="ts">
+definePageMeta({
+    auth: {
+        roles: ["admin"], // Only admins can access
+        unauthorizedRedirect: "/dashboard",
+    },
+});
+</script>
+
+<template>
+    <div>
+        <h1>Admin Dashboard</h1>
+        <!-- Admin content -->
+    </div>
+</template>
+```
+
+## Component with Role Checks
+
+```vue
+<!-- components/AdminButton.vue -->
+<template>
+    <div>
+        <!-- Check single role -->
+        <UButton v-if="hasRole('admin')" @click="handleAdminAction"> Admin Action </UButton>
+
+        <!-- Check any of multiple roles -->
+        <UButton v-if="hasAnyRole(['admin', 'moderator'])" @click="handleModeration"> Moderate Content </UButton>
+
+        <!-- Check all roles (user must have both) -->
+        <UButton v-if="hasAllRoles(['premium', 'verified'])" @click="handlePremiumFeature"> Premium Verified Feature </UButton>
+
+        <!-- Display all user roles -->
+        <p>Your roles: {{ userRoles.join(", ") }}</p>
+    </div>
+</template>
+
+<script setup lang="ts">
+const { hasRole, hasAnyRole, hasAllRoles, userRoles } = useDirectusAuth();
+
+const handleAdminAction = () => {
+    // Admin-only action
+};
+
+const handleModeration = () => {
+    // Admin or moderator action
+};
+
+const handlePremiumFeature = () => {
+    // Requires both premium and verified roles
+};
+</script>
+```
+
+## Advanced: Using Custom Field with Transform
+
+### Single Role Transform
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        auth: {
+            permissions: {
+                enabled: true,
+                field: "subscription_level", // Custom field
+                transform: (value, user) => {
+                    // Check verification status first
+                    if (!user.email_verified) return "unverified";
+
+                    // Return the subscription level
+                    return value || "free";
+                },
+                mapping: {
+                    free: "free",
+                    basic: "basic",
+                    premium: "premium",
+                    enterprise: "enterprise",
+                },
+            },
+        },
+    },
+});
+```
+
+### Multiple Roles Transform
+
+```typescript
+// Transform can return an array for multiple roles
+export default defineNuxtConfig({
+    directus: {
+        auth: {
+            permissions: {
+                enabled: true,
+                field: "role",
+                transform: (value, user) => {
+                    const roles = [];
+
+                    // Add primary role
+                    if (value) roles.push(value);
+
+                    // Add additional roles based on user properties
+                    if (user.is_premium) roles.push("premium");
+                    if (user.is_moderator) roles.push("moderator");
+                    if (user.email_verified) roles.push("verified");
+
+                    return roles;
+                },
+                mapping: {
+                    "uuid-admin": "admin",
+                    "uuid-user": "user",
+                },
+            },
+        },
+    },
+});
+```
+
+### Parse Comma-Separated Roles
+
+```typescript
+// If Directus field contains: "admin,editor,moderator"
+export default defineNuxtConfig({
+    directus: {
+        auth: {
+            permissions: {
+                enabled: true,
+                field: "roles_csv",
+                transform: (value) => {
+                    if (typeof value === "string") {
+                        return value
+                            .split(",")
+                            .map((r) => r.trim())
+                            .filter(Boolean);
+                    }
+                    return [];
+                },
+            },
+        },
+    },
+});
+```
+
+### Parse JSON Array
+
+```typescript
+// If Directus field contains JSON: ["admin", "editor"]
+export default defineNuxtConfig({
+    directus: {
+        auth: {
+            permissions: {
+                enabled: true,
+                field: "permissions_json",
+                transform: (value) => {
+                    if (typeof value === "string") {
+                        try {
+                            return JSON.parse(value);
+                        } catch {
+                            return [];
+                        }
+                    }
+                    return Array.isArray(value) ? value : [value];
+                },
+            },
+        },
+    },
+});
+```
+
+```vue
+<!-- pages/premium.vue -->
+<script setup>
+definePageMeta({
+    auth: {
+        roles: ["premium", "enterprise"],
+        unauthorizedRedirect: "/pricing",
+    },
+});
+</script>
+```
+
+## Multiple Page Examples
+
+### Public Page (No Restrictions)
+
+```vue
+<script setup>
+definePageMeta({
+    auth: false, // Public page
+});
+</script>
+```
+
+### Authenticated Only (Any Role)
+
+```vue
+<script setup>
+definePageMeta({
+    auth: true, // Any authenticated user
+});
+</script>
+```
+
+### Specific Roles Required
+
+```vue
+<script setup>
+definePageMeta({
+    auth: {
+        roles: ["admin", "moderator"], // Admin OR moderator
+    },
+});
+</script>
+```
+
+### Exclude Specific Roles
+
+```vue
+<script setup>
+definePageMeta({
+    auth: {
+        excludeRoles: ["banned", "suspended"],
+    },
+});
+</script>
+```

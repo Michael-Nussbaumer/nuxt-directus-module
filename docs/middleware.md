@@ -1,0 +1,410 @@
+# Middleware
+
+The module provides a global authentication middleware that can be configured to protect routes automatically or selectively.
+
+## How It Works
+
+The middleware is **always registered** but its behavior changes based on the `enableGlobalMiddleware` configuration option.
+
+## Configuration Modes
+
+### Mode 1: Secure by Default (`enableGlobalMiddleware: true`)
+
+All routes require authentication unless explicitly marked as public.
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        enableGlobalMiddleware: true, // Default
+    },
+});
+```
+
+**Behavior:**
+
+- All routes require authentication
+- Use `auth: false` to make pages public
+- Login/register paths automatically excluded
+- Unauthenticated users redirected to login
+
+### Mode 2: Public by Default (`enableGlobalMiddleware: false`)
+
+All routes are public unless explicitly protected.
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        enableGlobalMiddleware: false,
+    },
+});
+```
+
+**Behavior:**
+
+- All routes are public
+- Use `auth: true` to protect pages
+- Login/register paths work normally
+- Only explicit `auth: true` pages require authentication
+
+## Page Meta Options
+
+### Public Page (`auth: false`)
+
+Always public, regardless of global setting.
+
+```typescript
+// pages/about.vue
+definePageMeta({
+    auth: false,
+});
+```
+
+### Protected Page (`auth: true`)
+
+Always requires authentication.
+
+```typescript
+// pages/dashboard.vue
+definePageMeta({
+    auth: true,
+});
+```
+
+### Unauthenticated-Only Page
+
+Only accessible to non-authenticated users (login, register pages).
+
+```typescript
+// pages/login.vue
+definePageMeta({
+    auth: {
+        unauthenticatedOnly: true,
+    },
+});
+```
+
+Authenticated users visiting this page will be redirected to `afterLoginPath`.
+
+### Custom Redirect for Authenticated Users
+
+```typescript
+// pages/login.vue
+definePageMeta({
+    auth: {
+        unauthenticatedOnly: true,
+        navigateAuthenticatedTo: "/dashboard",
+    },
+});
+```
+
+### Custom Redirect for Unauthenticated Users
+
+```typescript
+// pages/admin.vue
+definePageMeta({
+    auth: {
+        navigateUnauthenticatedTo: "/admin/login",
+    },
+});
+```
+
+### Default Behavior (no meta)
+
+Follows `enableGlobalMiddleware` setting:
+
+- If `true`: requires authentication
+- If `false`: public
+
+```typescript
+// pages/home.vue
+// No auth meta defined
+
+// With enableGlobalMiddleware: true → requires auth
+// With enableGlobalMiddleware: false → public
+```
+
+## Automatic Path Handling
+
+The middleware automatically handles configured auth paths without requiring page meta:
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        auth: {
+            loginPath: "/login",
+            registerPath: "/register",
+        },
+    },
+});
+```
+
+**These paths are automatically:**
+
+- Excluded from authentication checks
+- Treated as unauthenticated-only
+- Will redirect authenticated users to `afterLoginPath`
+
+## Redirect Cookie
+
+The middleware stores the intended destination when unauthenticated users try to access protected pages.
+
+**Flow:**
+
+1. User visits `/dashboard` (protected)
+2. Middleware redirects to `/login`
+3. Redirect stored in `directus-auth-redirect` cookie
+4. User logs in
+5. Automatically redirected to `/dashboard`
+
+**Cookie details:**
+
+- Name: `directus-auth-redirect`
+- Max age: 10 minutes
+- Auto-cleared after successful redirect
+
+## Complete Examples
+
+### Example 1: Public Website with Admin Area
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        enableGlobalMiddleware: false, // Public by default
+        auth: {
+            loginPath: "/admin/login",
+            afterLoginPath: "/admin/dashboard",
+            afterLogoutPath: "/",
+        },
+    },
+});
+```
+
+```typescript
+// pages/index.vue (public)
+// No auth meta needed
+
+// pages/about.vue (public)
+// No auth meta needed
+
+// pages/admin/dashboard.vue (protected)
+definePageMeta({
+    auth: true,
+});
+
+// pages/admin/login.vue
+definePageMeta({
+    auth: {
+        unauthenticatedOnly: true,
+        navigateAuthenticatedTo: "/admin/dashboard",
+    },
+});
+```
+
+### Example 2: Secure App with Public Landing
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        enableGlobalMiddleware: true, // Secure by default
+        auth: {
+            loginPath: "/login",
+            registerPath: "/register",
+            afterLoginPath: "/app",
+            afterLogoutPath: "/",
+        },
+    },
+});
+```
+
+```typescript
+// pages/index.vue (public landing page)
+definePageMeta({
+    auth: false,
+});
+
+// pages/pricing.vue (public)
+definePageMeta({
+    auth: false,
+});
+
+// pages/app/dashboard.vue (protected)
+// No auth meta needed - protected by default
+
+// pages/login.vue
+definePageMeta({
+    auth: {
+        unauthenticatedOnly: true,
+    },
+});
+```
+
+### Example 3: Multi-tenant App
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+    directus: {
+        enableGlobalMiddleware: true,
+        auth: {
+            loginPath: "/auth/login",
+            registerPath: "/auth/register",
+            afterLoginPath: "/workspace",
+            afterLogoutPath: "/auth/login",
+        },
+    },
+});
+```
+
+```typescript
+// pages/index.vue (public)
+definePageMeta({
+    auth: false,
+});
+
+// pages/auth/login.vue
+definePageMeta({
+    auth: {
+        unauthenticatedOnly: true,
+        navigateAuthenticatedTo: "/workspace",
+    },
+});
+
+// pages/workspace/index.vue (protected)
+// No auth meta needed
+
+// pages/workspace/settings.vue (protected)
+// No auth meta needed
+```
+
+## Page Layout Example
+
+```vue
+<!-- layouts/default.vue -->
+<template>
+    <div>
+        <nav>
+            <NuxtLink to="/">Home</NuxtLink>
+
+            <template v-if="isAuthenticated">
+                <NuxtLink to="/dashboard">Dashboard</NuxtLink>
+                <button @click="logout">Logout</button>
+            </template>
+
+            <template v-else>
+                <NuxtLink to="/login">Login</NuxtLink>
+                <NuxtLink to="/register">Register</NuxtLink>
+            </template>
+        </nav>
+
+        <slot />
+    </div>
+</template>
+
+<script setup lang="ts">
+const { isAuthenticated, logout } = useDirectusAuth();
+</script>
+```
+
+## Debugging
+
+The middleware logs navigation events to the console:
+
+```
+[directus-auth middleware] from /home to /dashboard
+[directus-auth middleware] from /dashboard to /auth/login
+```
+
+You can use these logs to debug authentication flow issues.
+
+## Middleware Execution Order
+
+1. Check if route is login/register path → allow access
+2. Check page meta `auth` value
+3. If `auth: false` → allow access (public)
+4. If no auth meta → use `enableGlobalMiddleware` setting
+5. Check authentication status
+6. Handle redirects based on authentication state
+
+## Security Considerations
+
+### Cookie Security
+
+The module uses secure cookies in production:
+
+```typescript
+{
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  httpOnly: false // Needed for client-side access
+}
+```
+
+### HTTPS Required
+
+In production, ensure your app runs on HTTPS for secure cookie handling.
+
+### Token Storage
+
+Authentication tokens are stored in HTTP-only cookies when possible. The redirect cookie is not HTTP-only to allow JavaScript access.
+
+## Troubleshooting
+
+### Infinite Redirects
+
+**Problem:** Browser shows "too many redirects" error
+
+**Causes:**
+
+1. Login page doesn't have proper auth meta
+2. Auth path configuration doesn't match actual route
+
+**Solutions:**
+
+```typescript
+// Make sure login page has correct meta
+definePageMeta({
+  auth: {
+    unauthenticatedOnly: true
+  }
+})
+
+// Verify path configuration matches
+directus: {
+  auth: {
+    loginPath: '/login', // Must match actual route
+  }
+}
+```
+
+### Not Redirecting After Login
+
+**Problem:** User logs in but stays on login page
+
+**Cause:** Missing navigation in login handler
+
+**Solution:**
+
+```typescript
+const handleLogin = async () => {
+    // login() already handles navigation
+    await login(credentials);
+    // No manual navigation needed
+};
+```
+
+### Redirect Cookie Not Working
+
+**Problem:** User not redirected to intended page after login
+
+**Cause:** Cookie might be blocked or expired
+
+**Check:**
+
+1. Cookie is set (check browser DevTools)
+2. Cookie hasn't expired (10 min max age)
+3. Navigation happens from login/register page
