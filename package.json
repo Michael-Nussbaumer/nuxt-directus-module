@@ -22,7 +22,10 @@
         "prepack": "pnpm run build",
         "generate:types": "cross-env NODE_ENV=development tsx scripts/generate-directus-types.ts",
         "lint": "eslint .",
-        "release": "pnpm run build && npm publish"
+        "release": "pnpm run build && npm publish",
+        "docs:dev": "cd docs-site && pnpm install && pnpm run dev",
+        "docs:build": "cd docs-site && pnpm install && pnpm run build",
+        "docs:preview": "cd docs-site && pnpm run preview"
     },
     "dependencies": {
         "@nuxt/kit": "^3.15.3",

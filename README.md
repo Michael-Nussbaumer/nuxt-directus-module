@@ -1,7 +1,9 @@
 # @michael-nussbaumer/nuxt-directus
 
-[![npm version](https://img.shields.io/npm/v/@Michael-Nussbaumer/nuxt-directus.svg)](https://www.npmjs.com/package/@michael-nussbaumer/nuxt-directus)
+[![npm version](https://img.shields.io/npm/v/@michael-nussbaumer/nuxt-directus.svg)](https://www.npmjs.com/package/@michael-nussbaumer/nuxt-directus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-live-brightgreen.svg)](https://michael-nussbaumer.github.io/nuxt-directus-module/)
+[![Nuxt](https://img.shields.io/badge/Nuxt-3%20%7C%204-00DC82.svg)](https://nuxt.com)
 
 A production-ready Nuxt 4 module that integrates Directus SDK with authentication, configurable global auth middleware, and automatic TypeScript type generation from Directus OpenAPI schema.
 
@@ -111,15 +113,21 @@ definePageMeta({
 
 ## Documentation
 
+📚 **[Full Documentation Site](https://michael-nussbaumer.github.io/nuxt-directus-module/)**
+
 Comprehensive guides for all module features:
 
-- **[Getting Started](./docs/getting-started.md)** - Installation, setup, and basic usage
-- **[Configuration](./docs/configuration.md)** - Module options and environment variables
-- **[Authentication](./docs/authentication.md)** - Login, logout, registration, and user management
-- **[API Usage](./docs/api.md)** - CRUD operations, queries, and filtering
-- **[Real-time WebSocket](./docs/realtime.md)** - Live subscriptions and event handling
-- **[Middleware](./docs/middleware.md)** - Route protection and authentication flows
-- **[Type Generation](./docs/type-generation.md)** - Automatic TypeScript types from OpenAPI schema
+- **[Getting Started](https://michael-nussbaumer.github.io/nuxt-directus-module/getting-started)** - Installation, setup, and basic usage
+- **[Configuration](https://michael-nussbaumer.github.io/nuxt-directus-module/configuration)** - Module options and environment variables
+- **[Authentication](https://michael-nussbaumer.github.io/nuxt-directus-module/authentication)** - Login, logout, registration, and user management
+- **[API Usage](https://michael-nussbaumer.github.io/nuxt-directus-module/api)** - CRUD operations, queries, and filtering
+- **[Real-time WebSocket](https://michael-nussbaumer.github.io/nuxt-directus-module/realtime)** - Live subscriptions and event handling
+- **[Middleware](https://michael-nussbaumer.github.io/nuxt-directus-module/middleware)** - Route protection and authentication flows
+- **[Role-Based Permissions](https://michael-nussbaumer.github.io/nuxt-directus-module/role-based-permissions)** - Advanced access control
+- **[Type Generation](https://michael-nussbaumer.github.io/nuxt-directus-module/type-generation)** - Automatic TypeScript types from OpenAPI schema
+- **[Examples](https://michael-nussbaumer.github.io/nuxt-directus-module/examples)** - Code examples and use cases
+
+Or browse the [docs folder](./docs) in this repository.
 
 ## Quick Reference
 
@@ -169,7 +177,7 @@ API operations:
 - `updateMany(collection, ids, data)` - Update multiple items
 - `deleteOne(collection, id)` - Delete item
 - `deleteMany(collection, ids)` - Delete multiple items
-- `customRequest(method, path, options)` - Custom endpoint
+- `customRequest(path, options)` - Custom endpoint
 
 #### `useDirectusRealtime()`
 
@@ -219,4 +227,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Repository
 
-https://github.com/michael-nussbaumerCommunications/nuxt-directus-module
+https://github.com/Michael-Nussbaumer/nuxt-directus-module
+
+## Documentation Site
+
+The documentation is hosted on GitHub Pages. To set it up for the first time, see [GITHUB_PAGES_SETUP.md](./GITHUB_PAGES_SETUP.md).
+
+Visit: https://michael-nussbaumer.github.io/nuxt-directus-module/

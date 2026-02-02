@@ -2,6 +2,10 @@
 
 The `useDirectusAuth()` composable provides authentication methods and reactive state.
 
+::: tip Server Configuration Required
+For password reset and email verification to work, you must configure URL allow lists on your Directus server. See [Configuration → Directus Server Configuration](/configuration#directus-server-configuration) for details.
+:::
+
 ## Usage
 
 ```vue
@@ -80,6 +84,7 @@ Authenticate a user with email and password.
 
 - `credentials.email` (string) - User email
 - `credentials.password` (string) - User password
+- `credentials.otp` (string, optional) - One-time password for 2FA
 
 **Returns:** `Promise<DirectusUser>`
 
@@ -153,12 +158,13 @@ Register a new user account.
 - `data.last_name` (string, optional) - Last name
 - Additional custom fields
 
-**Returns:** `Promise<DirectusUser>`
+**Returns:** `Promise<boolean>`
 
 **Features:**
 
-- Automatically logs in after successful registration
-- Redirects to `afterLoginPath`
+- Sends verification email to user
+- User must verify email before logging in
+- Verification URL can be configured via `auth.verificationUrl`
 
 ```vue
 <script setup lang="ts">
@@ -200,6 +206,10 @@ await fetchUser();
 
 Verify user email address with a verification token.
 
+::: warning Directus Server Configuration
+Requires `USER_REGISTER_URL_ALLOW_LIST` configured on your Directus server. See [Configuration](/configuration#directus-server-configuration).
+:::
+
 **Parameters:**
 
 - `token` (string) - Email verification token from email
@@ -221,6 +231,10 @@ onMounted(async () => {
 ### `requestPasswordReset(email)`
 
 Request a password reset email.
+
+::: warning Directus Server Configuration
+Requires `PASSWORD_RESET_URL_ALLOW_LIST` configured on your Directus server. See [Configuration](/configuration#directus-server-configuration).
+:::
 
 **Parameters:**
 
@@ -342,6 +356,215 @@ const handleLogin = async () => {
     await login(credentials.value);
 };
 </script>
+```
+
+### `updatePassword(currentPassword, newPassword)`
+
+Update the current user's password.
+
+**Parameters:**
+
+- `currentPassword` (string) - Current password for verification
+- `newPassword` (string) - New password
+
+**Returns:** `Promise<boolean>`
+
+```vue
+<script setup lang="ts">
+const { updatePassword } = useDirectusAuth();
+
+const currentPassword = ref("");
+const newPassword = ref("");
+
+const handlePasswordUpdate = async () => {
+    try {
+        await updatePassword(currentPassword.value, newPassword.value);
+        // Password updated successfully
+    } catch (e) {
+        console.error("Password update failed:", e);
+    }
+};
+</script>
+```
+
+### `generateTwoFactorSecret(password)`
+
+Generate a 2FA secret for the current user.
+
+**Parameters:**
+
+- `password` (string) - Current password for verification
+
+**Returns:** `Promise<{ secret: string; otpauth_url: string }>`
+
+```typescript
+const { generateTwoFactorSecret } = useDirectusAuth();
+
+const setup2FA = async () => {
+    const { secret, otpauth_url } = await generateTwoFactorSecret(password.value);
+    // Display QR code using otpauth_url
+};
+```
+
+### `enableTwoFactor(secret, otp)`
+
+Enable 2FA for the current user.
+
+**Parameters:**
+
+- `secret` (string) - Secret from `generateTwoFactorSecret`
+- `otp` (string) - One-time password from authenticator app
+
+**Returns:** `Promise<boolean>`
+
+```typescript
+const { enableTwoFactor } = useDirectusAuth();
+
+await enableTwoFactor(secret, otpCode.value);
+// 2FA is now enabled
+```
+
+### `disableTwoFactor(otp)`
+
+Disable 2FA for the current user.
+
+**Parameters:**
+
+- `otp` (string) - One-time password from authenticator app
+
+**Returns:** `Promise<boolean>`
+
+```typescript
+const { disableTwoFactor } = useDirectusAuth();
+
+await disableTwoFactor(otpCode.value);
+// 2FA is now disabled
+```
+
+### `isTwoFactorEnabled`
+
+- **Type:** `ComputedRef<boolean>`
+- **Readonly**
+
+Whether the current user has 2FA enabled.
+
+```typescript
+const { isTwoFactorEnabled } = useDirectusAuth();
+
+if (isTwoFactorEnabled.value) {
+    // Show 2FA management UI
+}
+```
+
+### `userRoles`
+
+- **Type:** `ComputedRef<string[]>`
+- **Readonly**
+
+Array of user roles (with mapping and transformation applied). Requires permissions configuration enabled.
+
+```typescript
+const { userRoles } = useDirectusAuth();
+
+console.log(userRoles.value); // ['admin', 'editor']
+```
+
+### `userRole`
+
+- **Type:** `ComputedRef<string | null>`
+- **Readonly**
+
+Primary user role (first role in array). Convenience accessor for single-role scenarios.
+
+```typescript
+const { userRole } = useDirectusAuth();
+
+console.log(userRole.value); // 'admin'
+```
+
+### `userRoleRaw`
+
+- **Type:** `ComputedRef<any>`
+- **Readonly**
+
+Raw role value from Directus (untransformed, unmapped).
+
+```typescript
+const { userRoleRaw } = useDirectusAuth();
+
+console.log(userRoleRaw.value); // UUID or raw field value
+```
+
+### `hasRole(role)`
+
+Check if user has a specific role.
+
+**Parameters:**
+
+- `role` (string) - Role to check
+
+**Returns:** `boolean`
+
+```typescript
+const { hasRole } = useDirectusAuth();
+
+if (hasRole('admin')) {
+    // Show admin features
+}
+```
+
+### `hasAnyRole(roles)`
+
+Check if user has any of the specified roles.
+
+**Parameters:**
+
+- `roles` (string[]) - Array of roles to check
+
+**Returns:** `boolean`
+
+```typescript
+const { hasAnyRole } = useDirectusAuth();
+
+if (hasAnyRole(['admin', 'moderator'])) {
+    // Show moderation features
+}
+```
+
+### `hasAllRoles(roles)`
+
+Check if user has all of the specified roles.
+
+**Parameters:**
+
+- `roles` (string[]) - Array of roles to check
+
+**Returns:** `boolean`
+
+```typescript
+const { hasAllRoles } = useDirectusAuth();
+
+if (hasAllRoles(['premium', 'verified'])) {
+    // Show premium verified features
+}
+```
+
+### `isNotRole(roles)`
+
+Check if user is NOT in any of the excluded roles.
+
+**Parameters:**
+
+- `roles` (string[]) - Array of roles to exclude
+
+**Returns:** `boolean`
+
+```typescript
+const { isNotRole } = useDirectusAuth();
+
+if (isNotRole(['banned', 'suspended'])) {
+    // Allow access
+}
 ```
 
 ## Complete Register Example

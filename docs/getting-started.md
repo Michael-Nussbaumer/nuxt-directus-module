@@ -41,7 +41,46 @@ DIRECTUS_URL=http://localhost:8055
 DIRECTUS_OPENAPI_TOKEN=Bearer your-token-here
 ```
 
-### 3. Proxy Configuration (Recommended)
+### 3. Directus Server Configuration
+
+**Important:** Configure your Directus server to allow authentication-related URLs from your Nuxt app.
+
+Add these environment variables to your **Directus server** `.env` file:
+
+```env
+# Allow password reset emails to link back to your Nuxt app
+PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:3000/auth/reset-password,https://your-app.com/auth/reset-password
+
+# Allow user registration verification emails
+USER_REGISTER_URL_ALLOW_LIST=http://localhost:3000/auth/verify-email,https://your-app.com/auth/verify-email
+
+# Allow user invite emails (if using invites)
+USER_INVITE_URL_ALLOW_LIST=http://localhost:3000/auth/accept-invite,https://your-app.com/auth/accept-invite
+```
+
+**Why is this needed?**
+
+Directus requires you to explicitly allow URLs that can be used in authentication emails for security. Without these settings, password reset and email verification will fail.
+
+**Production Setup:**
+
+For production, only include your production URLs:
+
+```env
+PASSWORD_RESET_URL_ALLOW_LIST=https://your-app.com/auth/reset-password
+USER_REGISTER_URL_ALLOW_LIST=https://your-app.com/auth/verify-email
+USER_INVITE_URL_ALLOW_LIST=https://your-app.com/auth/accept-invite
+```
+
+**Multiple Environments:**
+
+You can specify multiple URLs (comma-separated) to support both development and production:
+
+```env
+PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:3000/auth/reset-password,https://staging.your-app.com/auth/reset-password,https://your-app.com/auth/reset-password
+```
+
+### 4. Proxy Configuration (Recommended)
 
 If your Directus instance is on a different domain (e.g., `http://directus.example.com`), **use Nitro proxy** to avoid CORS issues and ensure cookies work properly:
 

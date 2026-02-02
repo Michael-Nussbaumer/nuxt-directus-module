@@ -217,6 +217,138 @@ DIRECTUS_OPENAPI_TOKEN=Bearer your-admin-token-here
 DIRECTUS_OPENAPI_URL=http://directus.local/server/specs/oas
 ```
 
+## Directus Server Configuration
+
+### Authentication URL Allow Lists
+
+These environment variables must be set on your **Directus server** (not your Nuxt app) to enable authentication features.
+
+#### `PASSWORD_RESET_URL_ALLOW_LIST`
+
+- **Required for:** Password reset functionality
+- **Type:** Comma-separated list of URLs
+- **Purpose:** Allows Directus to send password reset emails with links to your Nuxt app
+
+```env
+# Development
+PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:3000/auth/reset-password
+
+# Production
+PASSWORD_RESET_URL_ALLOW_LIST=https://your-app.com/auth/reset-password
+
+# Multiple environments
+PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:3000/auth/reset-password,https://staging.your-app.com/auth/reset-password,https://your-app.com/auth/reset-password
+```
+
+The URL should match your `resetPasswordUrl` configuration or default to `/auth/reset-password`.
+
+#### `USER_REGISTER_URL_ALLOW_LIST`
+
+- **Required for:** Email verification after registration
+- **Type:** Comma-separated list of URLs
+- **Purpose:** Allows Directus to send verification emails with links to your Nuxt app
+
+```env
+# Development
+USER_REGISTER_URL_ALLOW_LIST=http://localhost:3000/auth/verify-email
+
+# Production
+USER_REGISTER_URL_ALLOW_LIST=https://your-app.com/auth/verify-email
+```
+
+The URL should match your `verificationUrl` configuration or default to `/auth/verify-email`.
+
+#### `USER_INVITE_URL_ALLOW_LIST`
+
+- **Required for:** User invitation system
+- **Type:** Comma-separated list of URLs
+- **Purpose:** Allows Directus to send invitation emails with links to your Nuxt app
+- **Optional:** Only needed if you're using user invitations
+
+```env
+# Development
+USER_INVITE_URL_ALLOW_LIST=http://localhost:3000/auth/accept-invite
+
+# Production
+USER_INVITE_URL_ALLOW_LIST=https://your-app.com/auth/accept-invite
+```
+
+### Additional Directus Settings
+
+#### Email Configuration
+
+Ensure your Directus server has email properly configured:
+
+```env
+# Email transport
+EMAIL_TRANSPORT=smtp
+EMAIL_SMTP_HOST=smtp.example.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USER=your-email@example.com
+EMAIL_SMTP_PASSWORD=your-password
+EMAIL_FROM=noreply@your-app.com
+```
+
+#### Public URL
+
+Set the public URL for your Directus instance:
+
+```env
+PUBLIC_URL=https://directus.your-app.com
+```
+
+#### CORS (if not using proxy)
+
+If you're connecting directly without a proxy:
+
+```env
+CORS_ENABLED=true
+CORS_ORIGIN=http://localhost:3000,https://your-app.com
+CORS_CREDENTIALS=true
+CORS_METHODS=GET,POST,PATCH,DELETE,OPTIONS
+CORS_ALLOWED_HEADERS=Content-Type,Authorization
+```
+
+**Note:** Using a proxy is recommended over CORS configuration. See [Proxy Configuration](#proxy-configuration) below.
+
+### Complete Directus `.env` Example
+
+```env
+# Directus Server Configuration
+PORT=8055
+PUBLIC_URL=http://localhost:8055
+
+# Database
+DB_CLIENT=pg
+DB_HOST=localhost
+DB_PORT=5432
+DB_DATABASE=directus
+DB_USER=postgres
+DB_PASSWORD=your-password
+
+# Security
+KEY=your-random-key
+SECRET=your-random-secret
+
+# Email
+EMAIL_TRANSPORT=smtp
+EMAIL_SMTP_HOST=smtp.example.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USER=your-email@example.com
+EMAIL_SMTP_PASSWORD=your-password
+EMAIL_FROM=noreply@your-app.com
+
+# Authentication URL Allow Lists (for Nuxt app)
+PASSWORD_RESET_URL_ALLOW_LIST=http://localhost:3000/auth/reset-password,https://your-app.com/auth/reset-password
+USER_REGISTER_URL_ALLOW_LIST=http://localhost:3000/auth/verify-email,https://your-app.com/auth/verify-email
+USER_INVITE_URL_ALLOW_LIST=http://localhost:3000/auth/accept-invite,https://your-app.com/auth/accept-invite
+
+# CORS (only if not using proxy)
+# CORS_ENABLED=true
+# CORS_ORIGIN=http://localhost:3000
+# CORS_CREDENTIALS=true
+```
+
 ## Proxy Configuration
 
 ### Why Use a Proxy?
