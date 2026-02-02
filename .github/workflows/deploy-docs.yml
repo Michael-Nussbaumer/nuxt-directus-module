@@ -39,18 +39,18 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: docs-site
+        working-directory: docs
 
       - name: Build Nuxt documentation
         run: pnpm run generate
-        working-directory: docs-site
+        working-directory: docs
         env:
           NUXT_APP_BASE_URL: /nuxt-directus-module/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs-site/.output/public
+          path: docs/.output/public
 
   deploy:
     environment:

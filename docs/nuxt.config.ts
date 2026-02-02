@@ -4,7 +4,8 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/image',
     '@nuxt/ui',
-    '@nuxt/content'
+    '@nuxt/content',
+    'nuxt-og-image',
   ],
 
   app: {
@@ -35,13 +36,14 @@ export default defineNuxtConfig({
 
   nitro: {
     prerender: {
-      routes: [
-        '/'
-      ],
-      crawlLinks: true,
-      autoSubfolderIndex: false
+      routes: ['/'],
+      crawlLinks: false,
+      autoSubfolderIndex: false,
+      failOnError: false
     }
   },
+
+  ssr: true,
 
   eslint: {
     config: {
