@@ -23,5 +23,10 @@ logs
 .env.*
 !.env.example
 
+# Build artifacts
+.output/
+.data/
+
+
 # VSC
 .history
