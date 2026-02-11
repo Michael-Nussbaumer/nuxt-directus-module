@@ -119,9 +119,25 @@ export default defineNuxtPlugin(async () => {
             }
 
             return me;
-        } catch (error) {
+        } catch (error: any) {
+            // Auth failed (SDK already tried to refresh automatically)
+            // Clear auth state and cookies to prevent endless loops
+            if (import.meta.dev) {
+                console.log("[Directus] Authentication failed:", error);
+            }
+
             isAuthenticatedState.value = false;
             currentUser.value = null;
+
+            // Clear cookies on client side
+            if (import.meta.client) {
+                const refreshTokenCookie = useCookie("directus_refresh_token");
+                refreshTokenCookie.value = null;
+
+                const dataCookie = useCookie("directus-data");
+                dataCookie.value = null;
+            }
+
             return false;
         }
     };

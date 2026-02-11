@@ -43,8 +43,9 @@ declare module "#app" {
 }
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-    const { isAuthenticated, fetchUser } = useDirectusAuth();
+    const { isAuthenticated } = useDirectusAuth();
     const config = useRuntimeConfig();
+    const { $directusAuth } = useNuxtApp();
 
     const { loginPath, registerPath, afterLoginPath } = config.public.directus?.auth || {
         loginPath: "/login",
@@ -92,14 +93,8 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     }
 
     try {
-        // Try to fetch user if not already loaded
-        if (!isAuthenticated.value) {
-            try {
-                await fetchUser();
-            } catch {
-                // User is not authenticated
-            }
-        }
+        // Always check fresh auth status on route change to detect token expiry/refresh failures
+        await $directusAuth.checkAuthStatus();
 
         const authenticated = isAuthenticated.value;
 
@@ -154,7 +149,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             const permissionsConfig = config.public.directus?.auth?.permissions;
             if (permissionsConfig?.enabled && (authMeta?.roles || authMeta?.excludeRoles)) {
                 // Get user from auth state
-                const currentUser = isAuthenticated.value ? await fetchUser() : null;
+                const currentUser = $directusAuth.currentUser.value;
 
                 if (currentUser) {
                     // Extract user's role(s) using configured field

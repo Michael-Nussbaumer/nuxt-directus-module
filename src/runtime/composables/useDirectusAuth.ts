@@ -278,11 +278,19 @@ export const useDirectusAuth = () => {
 
         try {
             const client = $directus as DirectusClient<any>;
+            // SDK automatically handles refresh with stored tokens
             await client.request(refresh({ mode: "cookie" }));
             await $directusAuth.checkAuthStatus();
             return true;
         } catch (e: any) {
             error.value = e.message || "Token refresh failed";
+
+            // Clear cookies on refresh failure
+            const refreshTokenCookie = useCookie("directus_refresh_token");
+            refreshTokenCookie.value = null;
+            const dataCookie = useCookie("directus-data");
+            dataCookie.value = null;
+
             throw e;
         } finally {
             isLoading.value = false;
