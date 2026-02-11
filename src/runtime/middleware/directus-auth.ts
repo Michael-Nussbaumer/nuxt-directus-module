@@ -1,4 +1,4 @@
-import { defineNuxtRouteMiddleware, navigateTo, useRuntimeConfig, useCookie } from "#app";
+import { defineNuxtRouteMiddleware, navigateTo, useRuntimeConfig, useCookie, useNuxtApp } from "#app";
 import { useDirectusAuth } from "../composables/useDirectusAuth";
 
 export interface PageMetaAuth {
