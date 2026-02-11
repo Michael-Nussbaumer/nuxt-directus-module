@@ -82,11 +82,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         requiresAuth = enableGlobalMiddleware;
     }
 
-    // Skip middleware for login/register pages
-    if ([loginPath, registerPath].some((p) => to.path.startsWith(p))) {
-        return;
-    }
-
     // If page is marked as public (auth: false), skip authentication
     if (!requiresAuth) {
         return;
@@ -97,6 +92,16 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         await $directusAuth.checkAuthStatus();
 
         const authenticated = isAuthenticated.value;
+
+        // Handle login/register pages - redirect if already authenticated
+        if ([loginPath, registerPath].some((p) => to.path.startsWith(p))) {
+            if (authenticated) {
+                // User is already logged in, redirect to afterLoginPath
+                return navigateTo(afterLoginPath);
+            }
+            // User is not logged in, allow access to login/register pages
+            return;
+        }
 
         // Handle unauthenticated users
         if (!authenticated) {
